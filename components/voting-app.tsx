@@ -15,6 +15,7 @@ export interface UserData {
   hasVoted: boolean
   ranking?: string[]
   timeExpired?: boolean
+  userId?: string
 }
 
 export function VotingApp() {
@@ -49,56 +50,92 @@ export function VotingApp() {
     setScreen("login")
   }
 
-  const handleLogin = (email: string) => {
+  const handleLogin = async (email: string, userId: string) => {
     if (isAdmin(email)) {
-      const adminUser: UserData = { email, hasVoted: false }
+      const adminUser: UserData = { email, hasVoted: false, userId }
       setUser(adminUser)
       localStorage.setItem("pxsol_week_user", JSON.stringify(adminUser))
       setScreen("admin")
       return
     }
 
-    const existingUsers = JSON.parse(localStorage.getItem("pxsol_week_voters") || "[]")
-    const existingUser = existingUsers.find((u: UserData) => u.email.toLowerCase() === email.toLowerCase())
+    // Verificar si el usuario ya votó en Firestore
+    try {
+      const { getUserVote } = await import("@/lib/firebase/firestore")
+      const existingVote = await getUserVote(userId)
 
-    if (existingUser && existingUser.hasVoted) {
-      setUser(existingUser)
-      setFinalRanking(existingUser.ranking || [])
-      setTimeExpired(existingUser.timeExpired || false)
-      localStorage.setItem("pxsol_week_user", JSON.stringify(existingUser))
-      setScreen("thankyou")
-    } else {
-      const newUser: UserData = { email, hasVoted: false }
+      if (existingVote) {
+        const userData: UserData = {
+          email,
+          hasVoted: true,
+          ranking: existingVote.ranking,
+          timeExpired: existingVote.timeExpired,
+          userId,
+        }
+        setUser(userData)
+        setFinalRanking(existingVote.ranking)
+        setTimeExpired(existingVote.timeExpired)
+        localStorage.setItem("pxsol_week_user", JSON.stringify(userData))
+        setScreen("thankyou")
+      } else {
+        const newUser: UserData = { email, hasVoted: false, userId }
+        setUser(newUser)
+        localStorage.setItem("pxsol_week_user", JSON.stringify(newUser))
+        setScreen("voting")
+      }
+    } catch (error) {
+      console.error("Error verificando voto:", error)
+      // Si hay error, continuar con el flujo normal
+      const newUser: UserData = { email, hasVoted: false, userId }
       setUser(newUser)
       localStorage.setItem("pxsol_week_user", JSON.stringify(newUser))
       setScreen("voting")
     }
   }
 
-  const handleVoteSubmitted = (ranking: string[], wasTimeExpired = false) => {
-    if (!user) return
+  const handleVoteSubmitted = async (ranking: string[], wasTimeExpired = false) => {
+    if (!user || !user.userId) return
 
-    const updatedUser: UserData = {
-      ...user,
-      hasVoted: true,
-      ranking,
-      timeExpired: wasTimeExpired,
+    try {
+      // Guardar voto en Firestore
+      const { saveVote } = await import("@/lib/firebase/firestore")
+      const { Timestamp } = await import("firebase/firestore")
+      
+      await saveVote({
+        userId: user.userId,
+        userEmail: user.email,
+        ranking,
+        timeExpired: wasTimeExpired,
+        voteStartTime: Timestamp.now(), // Podrías guardar el tiempo real de inicio si lo tienes
+      })
+
+      const updatedUser: UserData = {
+        ...user,
+        hasVoted: true,
+        ranking,
+        timeExpired: wasTimeExpired,
+      }
+      setUser(updatedUser)
+      setFinalRanking(ranking)
+      setTimeExpired(wasTimeExpired)
+      localStorage.setItem("pxsol_week_user", JSON.stringify(updatedUser))
+
+      setScreen("thankyou")
+    } catch (error) {
+      console.error("Error guardando voto:", error)
+      // Aún así mostrar la pantalla de agradecimiento
+      const updatedUser: UserData = {
+        ...user,
+        hasVoted: true,
+        ranking,
+        timeExpired: wasTimeExpired,
+      }
+      setUser(updatedUser)
+      setFinalRanking(ranking)
+      setTimeExpired(wasTimeExpired)
+      localStorage.setItem("pxsol_week_user", JSON.stringify(updatedUser))
+      setScreen("thankyou")
     }
-    setUser(updatedUser)
-    setFinalRanking(ranking)
-    setTimeExpired(wasTimeExpired)
-    localStorage.setItem("pxsol_week_user", JSON.stringify(updatedUser))
-
-    const existingUsers = JSON.parse(localStorage.getItem("pxsol_week_voters") || "[]")
-    const userIndex = existingUsers.findIndex((u: UserData) => u.email.toLowerCase() === user.email.toLowerCase())
-    if (userIndex >= 0) {
-      existingUsers[userIndex] = updatedUser
-    } else {
-      existingUsers.push(updatedUser)
-    }
-    localStorage.setItem("pxsol_week_voters", JSON.stringify(existingUsers))
-
-    setScreen("thankyou")
   }
 
   const handleVoteAgain = () => {
