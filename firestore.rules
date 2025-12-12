@@ -1,0 +1,38 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Función helper para verificar si es admin
+    function isAdmin(email) {
+      return email.matches('.*@(pxsol\\.com|racimo\\.tech)$') &&
+             email in ['pablo@pxsol.com', 'sofia@pxsol.com', 
+                      'nw@racimo.tech', 'camila@pxsol.com'];
+    }
+    
+    // Función helper para verificar si la votación está cerrada
+    function isVotingClosed() {
+      let votingConfig = get(/databases/$(database)/documents/config/voting);
+      return votingConfig != null && votingConfig.data.status == 'closed';
+    }
+    
+    // Usuarios autenticados pueden leer su propio voto, o todos los votos si la votación está cerrada
+    match /votes/{voteId} {
+      allow read: if request.auth != null && 
+                     (resource.data.userId == request.auth.uid ||
+                      isAdmin(request.auth.token.email) ||
+                      isVotingClosed());
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.userEmail == request.auth.token.email;
+    }
+    
+    // Configuración: solo admins pueden escribir, todos autenticados pueden leer
+    match /config/voting {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && 
+                      isAdmin(request.auth.token.email);
+    }
+  }
+}
+
+
+
