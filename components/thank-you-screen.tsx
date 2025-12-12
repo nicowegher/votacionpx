@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import confetti from "canvas-confetti"
 import { CheckCircle2, Clock, Presentation } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { getVotingConfig, type VotingConfig } from "@/lib/firestore/voting-config"
+import { getVotingConfig, type VotingConfig } from "@/lib/firebase/firestore"
 
 interface ThankYouScreenProps {
   ranking: string[]

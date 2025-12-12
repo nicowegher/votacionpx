@@ -4,12 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { RefreshCw, Home, X, Play, Square, Loader2, Presentation } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { subscribeToVotes, type Vote } from "@/lib/firestore/votes"
 import {
+  subscribeToVotes,
   subscribeToVotingConfig,
   updateVotingStatus,
+  type Vote,
   type VotingConfig,
-} from "@/lib/firestore/voting-config"
+} from "@/lib/firebase/firestore"
 import { toast } from "sonner"
 
 interface AdminDashboardProps {

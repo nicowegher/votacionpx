@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { subscribeToVotes, type Vote } from "@/lib/firestore/votes"
-import { getVotingConfig } from "@/lib/firestore/voting-config"
+import { subscribeToVotes, getVotingConfig, type Vote } from "@/lib/firebase/firestore"
 import { Trophy } from "lucide-react"
 
 interface ProjectStats {
