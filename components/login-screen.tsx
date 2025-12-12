@@ -25,6 +25,7 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
 
   // Lista de correos permitidos específicos (usuarios finales)
   const ALLOWED_EMAILS = [
+    "nicolas.wegher@gmail.com",
     "camigd2901@gmail.com",
     "socuerdo@gmail.com",
     "pablomartino94@gmail.com",
