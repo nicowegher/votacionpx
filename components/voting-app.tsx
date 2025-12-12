@@ -61,8 +61,33 @@ export function VotingApp() {
 
     // Verificar si el usuario ya votó en Firestore
     try {
-      const { getUserVote } = await import("@/lib/firebase/firestore")
+      const { getUserVote, getVotingConfig } = await import("@/lib/firebase/firestore")
       const existingVote = await getUserVote(userId)
+      const votingConfig = await getVotingConfig()
+
+      // Verificar si la votación está cerrada
+      if (votingConfig?.status === "closed") {
+        if (existingVote) {
+          // Si ya votó, mostrar pantalla de agradecimiento
+          const userData: UserData = {
+            email,
+            hasVoted: true,
+            ranking: existingVote.ranking,
+            timeExpired: existingVote.timeExpired,
+            userId,
+          }
+          setUser(userData)
+          setFinalRanking(existingVote.ranking)
+          setTimeExpired(existingVote.timeExpired)
+          localStorage.setItem("pxsol_week_user", JSON.stringify(userData))
+          setScreen("thankyou")
+        } else {
+          // Si no votó y la votación está cerrada, mostrar mensaje
+          alert("La votación está cerrada. No se pueden enviar más votos.")
+          return
+        }
+        return
+      }
 
       if (existingVote) {
         const userData: UserData = {
@@ -97,10 +122,17 @@ export function VotingApp() {
     if (!user || !user.userId) return
 
     try {
-      // Guardar voto en Firestore
-      const { saveVote } = await import("@/lib/firebase/firestore")
+      // Verificar primero si la votación está cerrada
+      const { getVotingConfig, saveVote } = await import("@/lib/firebase/firestore")
       const { Timestamp } = await import("firebase/firestore")
       
+      const votingConfig = await getVotingConfig()
+      if (votingConfig?.status === "closed") {
+        alert("La votación está cerrada. No se pueden enviar más votos.")
+        return
+      }
+      
+      // Guardar voto en Firestore
       await saveVote({
         userId: user.userId,
         userEmail: user.email,
@@ -121,9 +153,14 @@ export function VotingApp() {
       localStorage.setItem("pxsol_week_user", JSON.stringify(updatedUser))
 
       setScreen("thankyou")
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error guardando voto:", error)
-      // Aún así mostrar la pantalla de agradecimiento
+      // Si el error es porque la votación está cerrada, mostrar mensaje apropiado
+      if (error?.code === "permission-denied" || error?.message?.includes("closed")) {
+        alert("La votación está cerrada. No se pueden enviar más votos.")
+        return
+      }
+      // Para otros errores, aún así mostrar la pantalla de agradecimiento
       const updatedUser: UserData = {
         ...user,
         hasVoted: true,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ProjectCard } from "./project-card"
 import { Podium } from "./podium"
 import { VotingTimer } from "./voting-timer"
@@ -24,14 +24,14 @@ const initialProjects: Project[] = [
   },
   {
     id: "2",
-    name: "Conciliación Bancaria Inteligente",
+    name: "Conciliación Bancaria IA",
     description:
       "El Bot de Conciliación Inteligente de Pxsol que analiza automáticamente y en segundos los datos del PMS, Movimientos bancarios, Compras y ventas.",
     emoji: "🏦",
   },
   {
     id: "3",
-    name: "MentoIA",
+    name: "MentorIA",
     description:
       "Agente Pxsolero Interdisciplinario que centraliza el conocimiento y los flujos de trabajo entre distintas áreas con el fin de reducir consultas cruzadas y aumentar la eficiencia operativa.",
     emoji: "🧠",
@@ -50,7 +50,37 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
   const [ranking, setRanking] = useState<(Project | null)[]>([null, null, null])
   const [showPodium, setShowPodium] = useState(false)
   const [votingClosed, setVotingClosed] = useState(false)
+  const [closedByAdmin, setClosedByAdmin] = useState(false)
   const [endTime] = useState(getVotingEndTime)
+
+  // Suscribirse al estado de la votación en tiempo real
+  useEffect(() => {
+    const checkVotingStatus = async () => {
+      try {
+        const { subscribeToVotingConfig } = await import("@/lib/firebase/firestore")
+        const unsubscribe = subscribeToVotingConfig((config) => {
+          if (config?.status === "closed") {
+            setVotingClosed(true)
+            setClosedByAdmin(true)
+          }
+        })
+        return unsubscribe
+      } catch (error) {
+        console.error("Error suscribiéndose al estado de votación:", error)
+      }
+    }
+
+    let unsubscribe: (() => void) | undefined
+    checkVotingStatus().then((unsub) => {
+      unsubscribe = unsub
+    })
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
+  }, [])
 
   const assignToPosition = (project: Project, position: number) => {
     if (votingClosed) return
@@ -157,7 +187,9 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
 
       {votingClosed && (
         <div className="mb-4 p-3 bg-destructive/10 rounded-xl text-center">
-          <p className="text-destructive font-medium text-sm">El tiempo se ha agotado</p>
+          <p className="text-destructive font-medium text-sm">
+            {closedByAdmin ? "La votación ha sido cerrada por los administradores" : "El tiempo se ha agotado"}
+          </p>
         </div>
       )}
 

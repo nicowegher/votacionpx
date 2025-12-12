@@ -22,7 +22,8 @@ service cloud.firestore {
                       isVotingClosed());
       allow create: if request.auth != null && 
                        request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.userEmail == request.auth.token.email;
+                       request.resource.data.userEmail == request.auth.token.email &&
+                       !isVotingClosed();
     }
     
     // Configuración: solo admins pueden escribir, todos autenticados pueden leer

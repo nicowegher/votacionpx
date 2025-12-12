@@ -193,14 +193,14 @@ export const updateVotingStatus = async (
           },
           {
             id: "2",
-            name: "Conciliación Bancaria Inteligente",
+            name: "Conciliación Bancaria IA",
             description:
               "El Bot de Conciliación Inteligente de Pxsol que analiza automáticamente y en segundos los datos del PMS, Movimientos bancarios, Compras y ventas.",
             emoji: "🏦",
           },
           {
             id: "3",
-            name: "MentoIA",
+            name: "MentorIA",
             description:
               "Agente Pxsolero Interdisciplinario que centraliza el conocimiento y los flujos de trabajo entre distintas áreas con el fin de reducir consultas cruzadas y aumentar la eficiencia operativa.",
             emoji: "🧠",
