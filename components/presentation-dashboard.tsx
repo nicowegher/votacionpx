@@ -118,7 +118,7 @@ export function PresentationDashboard() {
         </div>
 
         {/* Podium Visual */}
-        {projectStats.length >= 3 && (
+        {projectStats.length >= 3 ? (
           <div className="mb-12 flex items-end justify-center gap-4 max-w-4xl mx-auto">
             {/* 2nd Place */}
             <div className="flex-1 flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0s_forwards]">
@@ -156,7 +156,21 @@ export function PresentationDashboard() {
               </div>
             </div>
           </div>
-        )}
+        ) : projectStats.length > 0 ? (
+          <div className="mb-12 flex items-end justify-center gap-4 max-w-4xl mx-auto">
+            {/* Solo mostrar el primer lugar si hay menos de 3 proyectos */}
+            <div className="flex-1 max-w-md flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0.2s_forwards]">
+              <div className="w-full bg-gradient-to-b from-[#fbbf24]/30 to-[#f59e0b]/20 rounded-t-3xl p-8 border-2 border-[#fbbf24] text-center mb-4 backdrop-blur-sm shadow-2xl">
+                <span className="text-6xl mb-3 block">🥇</span>
+                <span className="font-bold text-2xl text-foreground line-clamp-2">{projectStats[0].name}</span>
+                <div className="mt-4 text-4xl font-bold text-[#fbbf24]">{projectStats[0].totalPoints} pts</div>
+              </div>
+              <div className="w-full h-40 bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t-2xl flex items-center justify-center shadow-2xl border-t border-[#fbbf24]">
+                <span className="text-5xl font-bold text-white">1°</span>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

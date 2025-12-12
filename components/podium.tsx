@@ -55,7 +55,7 @@ export function Podium({ ranking, onBack, onReset, onConfirm }: PodiumProps) {
 
       {/* Podium Visual */}
       <div className="flex-1 flex items-end justify-center gap-2 mb-6 px-2">
-        {/* 2nd Place */}
+        {/* 2nd Place - Izquierda */}
         <div className="flex-1 flex flex-col items-center">
           <div className="w-full bg-card rounded-t-2xl p-3 border border-b-0 border-silver text-center mb-2">
             <span className="text-2xl mb-1 block">{ranking[1].emoji}</span>
@@ -66,24 +66,24 @@ export function Podium({ ranking, onBack, onReset, onConfirm }: PodiumProps) {
           </div>
         </div>
 
-        {/* 1st Place */}
+        {/* 1st Place - Centro (más alto) */}
         <div className="flex-1 flex flex-col items-center">
           <div className="w-full bg-card rounded-t-2xl p-3 border border-b-0 border-gold text-center mb-2 shadow-lg">
             <span className="text-3xl mb-1 block">{ranking[0].emoji}</span>
             <span className="font-bold text-sm text-foreground line-clamp-2">{ranking[0].name}</span>
           </div>
-          <div className="w-full h-28 bg-gold rounded-t-lg flex items-center justify-center shadow-lg">
-            <span className="text-3xl font-bold text-primary-foreground">1°</span>
+          <div className="w-full h-32 bg-gold rounded-t-lg flex items-center justify-center shadow-lg">
+            <span className="text-3xl font-bold text-slate-900 drop-shadow-sm">1°</span>
           </div>
         </div>
 
-        {/* 3rd Place */}
+        {/* 3rd Place - Derecha (más bajo que el 2°) */}
         <div className="flex-1 flex flex-col items-center">
           <div className="w-full bg-card rounded-t-2xl p-3 border border-b-0 border-bronze text-center mb-2">
             <span className="text-2xl mb-1 block">{ranking[2].emoji}</span>
             <span className="font-semibold text-xs text-foreground line-clamp-2">{ranking[2].name}</span>
           </div>
-          <div className="w-full h-14 bg-bronze rounded-t-lg flex items-center justify-center">
+          <div className="w-full h-12 bg-bronze rounded-t-lg flex items-center justify-center">
             <span className="text-2xl font-bold text-accent-foreground">3°</span>
           </div>
         </div>

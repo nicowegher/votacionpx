@@ -1,15 +1,10 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { ArrowLeft, Mail, LogIn, Loader2 } from "lucide-react"
-import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth"
+import { ArrowLeft, Mail, Loader2 } from "lucide-react"
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase/config"
-import { toast } from "sonner"
 
 interface LoginScreenProps {
   onLogin: (email: string, userId: string) => void
@@ -17,11 +12,8 @@ interface LoginScreenProps {
 }
 
 export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [isSignUp, setIsSignUp] = useState(false)
 
   // Lista de correos permitidos específicos (usuarios finales)
   const ALLOWED_EMAILS = [
@@ -83,76 +75,6 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
     }
   }
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!auth) {
-      setError("Firebase no está inicializado")
-      return
-    }
-
-    if (!email.trim()) {
-      setError("El correo es requerido")
-      return
-    }
-
-    if (!validateEmail(email)) {
-      setError("Correo no autorizado. Usa un correo con dominio @pxsol.com, @racimo.tech o un correo permitido")
-      return
-    }
-
-    if (isSignUp && !password.trim()) {
-      setError("La contraseña es requerida")
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      const emailLower = email.trim().toLowerCase()
-      let user
-
-      if (isSignUp) {
-        // Crear nuevo usuario
-        if (password.length < 6) {
-          setError("La contraseña debe tener al menos 6 caracteres")
-          setLoading(false)
-          return
-        }
-        const result = await createUserWithEmailAndPassword(auth, emailLower, password)
-        user = result.user
-      } else {
-        // Iniciar sesión existente
-        if (!password.trim()) {
-          setError("La contraseña es requerida para iniciar sesión")
-          setLoading(false)
-          return
-        }
-        const result = await signInWithEmailAndPassword(auth, emailLower, password)
-        user = result.user
-      }
-
-      if (user && user.email) {
-        onLogin(user.email.toLowerCase(), user.uid)
-      }
-    } catch (error: any) {
-      console.error("Error en autenticación:", error)
-      if (error.code === "auth/user-not-found") {
-        setError("Usuario no encontrado. ¿Quieres registrarte?")
-        setIsSignUp(true)
-      } else if (error.code === "auth/wrong-password") {
-        setError("Contraseña incorrecta")
-      } else if (error.code === "auth/email-already-in-use") {
-        setError("Este correo ya está registrado. Inicia sesión en su lugar.")
-        setIsSignUp(false)
-      } else {
-        setError(error.message || "Error al autenticar")
-      }
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="min-h-screen flex flex-col px-4 py-4">
       {/* Back Button */}
@@ -171,12 +93,10 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
             <Mail className="w-8 h-8 text-primary" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-1">
-            {isSignUp ? "Regístrate" : "Identifícate"}
+            Identifícate
           </h1>
           <p className="text-muted-foreground text-sm">
-            {isSignUp
-              ? "Crea una cuenta para registrar tu voto"
-              : "Ingresa tus credenciales para registrar tu voto"}
+            Ingresa tus credenciales para registrar tu voto
           </p>
         </div>
 
@@ -211,89 +131,16 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
               />
             </svg>
           )}
-          Continuar con Google
+          Continuar con Google Workspace
         </Button>
 
-        <div className="relative mb-4">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">O</span>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="email" className="text-foreground font-medium text-sm">
-              Correo electrónico
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="tucorreo@pxsol.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className={`h-11 pl-10 text-sm ${error ? "border-destructive" : ""}`}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-foreground font-medium text-sm">
-              Contraseña
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder={isSignUp ? "Mínimo 6 caracteres" : "Tu contraseña"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className={`h-11 text-sm ${error ? "border-destructive" : ""}`}
-            />
-          </div>
-
-          {error && <p className="text-xs text-destructive">{error}</p>}
-
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full h-11 text-sm bg-primary hover:bg-primary/90 mt-4"
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <LogIn className="w-4 h-4 mr-2" />
-            )}
-            {isSignUp ? "Registrarse" : "Iniciar sesión"}
-          </Button>
-        </form>
-
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setError(null)
-              setPassword("")
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground"
-            disabled={loading}
-          >
-            {isSignUp
-              ? "¿Ya tienes cuenta? Inicia sesión"
-              : "¿No tienes cuenta? Regístrate"}
-          </button>
-        </div>
+        {error && <p className="text-xs text-destructive mb-4">{error}</p>}
 
         {/* Info */}
-        <p className="mt-6 text-xs text-muted-foreground text-center">
+        <p className="mt-4 text-xs text-muted-foreground text-center">
+          Inicia sesión con tu cuenta de @pxsol.com
+        </p>
+        <p className="mt-4 text-xs text-muted-foreground text-center">
           Usamos tu correo para asegurar que cada persona vote una sola vez
         </p>
       </div>
