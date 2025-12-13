@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Mail, Loader2 } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { ArrowLeft, Mail, Loader2, AlertCircle } from "lucide-react"
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { auth } from "@/lib/firebase/config"
 
@@ -21,6 +22,7 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
     "camigd2901@gmail.com",
     "socuerdo@gmail.com",
     "pablomartino94@gmail.com",
+    "digitalhotelero@gmail.com",
   ]
 
   const validateEmail = (email: string) => {
@@ -58,7 +60,7 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
       const emailLower = user.email.toLowerCase()
       if (!validateEmail(emailLower)) {
         await auth.signOut()
-        setError("Correo no autorizado. Usa un correo con dominio @pxsol.com, @racimo.tech o un correo permitido")
+        setError("Correo no autorizado. Usa un correo con dominio @pxsol.com o un correo permitido")
         setLoading(false)
         return
       }
@@ -134,7 +136,13 @@ export function LoginScreen({ onLogin, onBack }: LoginScreenProps) {
           Continuar con Google Workspace
         </Button>
 
-        {error && <p className="text-xs text-destructive mb-4">{error}</p>}
+        {error && (
+          <Alert variant="destructive" className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle className="font-semibold">Acceso no autorizado</AlertTitle>
+            <AlertDescription className="text-sm mt-1">{error}</AlertDescription>
+          </Alert>
+        )}
 
         {/* Info */}
         <p className="mt-4 text-xs text-muted-foreground text-center">

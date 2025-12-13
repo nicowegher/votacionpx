@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { RefreshCw, Home, X, Play, Square, Loader2, Presentation } from "lucide-react"
+import { RefreshCw, Home, X, Play, Square, Loader2, Presentation, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   subscribeToVotes,
@@ -24,6 +24,26 @@ interface ProjectStats {
   secondPlace: number
   thirdPlace: number
   totalPoints: number
+}
+
+function compareProjectStats(a: ProjectStats, b: ProjectStats): number {
+  // 1. Comparar por puntos totales (descendente)
+  if (b.totalPoints !== a.totalPoints) {
+    return b.totalPoints - a.totalPoints
+  }
+  
+  // 2. Desempate por cantidad de primeros lugares (descendente)
+  if (b.firstPlace !== a.firstPlace) {
+    return b.firstPlace - a.firstPlace
+  }
+  
+  // 3. Desempate por cantidad de segundos lugares (descendente)
+  if (b.secondPlace !== a.secondPlace) {
+    return b.secondPlace - a.secondPlace
+  }
+  
+  // 4. Desempate final por orden alfabético (ascendente)
+  return a.name.localeCompare(b.name)
 }
 
 export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProps) {
@@ -73,7 +93,7 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
       })
     })
 
-    const sortedStats = Object.values(stats).sort((a, b) => b.totalPoints - a.totalPoints)
+    const sortedStats = Object.values(stats).sort(compareProjectStats)
     setProjectStats(sortedStats)
   }
 
@@ -100,12 +120,12 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
     setTimeout(() => setIsRefreshing(false), 500)
   }
 
-  const handleUpdateStatus = async (newStatus: "pending" | "active" | "closed") => {
+  const handleUpdateStatus = async (newStatus: "active" | "closed") => {
     try {
       setIsUpdatingStatus(true)
       await updateVotingStatus(newStatus, adminEmail)
       toast.success(
-        `Votación ${newStatus === "active" ? "activada" : newStatus === "closed" ? "cerrada" : "pausada"}`
+        `Votación ${newStatus === "active" ? "activada" : "cerrada"}`
       )
     } catch (error) {
       console.error("Error updating voting status:", error)
@@ -127,8 +147,6 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case "pending":
-        return "Pendiente"
       case "active":
         return "Activa"
       case "closed":
@@ -140,8 +158,6 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
-        return "bg-yellow-500/10 text-yellow-600 border-yellow-500/20"
       case "active":
         return "bg-green-500/10 text-green-600 border-green-500/20"
       case "closed":
@@ -177,35 +193,35 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
 
         {/* Estado de Votación */}
         <div className="mb-4">
-          <div className="flex items-center justify-between p-3 bg-card rounded-lg border border-border">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-muted-foreground">Estado:</span>
-              {votingConfig && (
+          <div className="p-4 bg-card rounded-lg border-2 border-border shadow-sm">
+            <h2 className="text-base font-semibold text-foreground mb-3">Estado de la Votación</h2>
+            {votingConfig && (
+              <div className="flex items-center gap-3 mb-3">
+                {votingConfig.status === "active" ? (
+                  <CheckCircle2 className="w-6 h-6 text-green-600" />
+                ) : (
+                  <XCircle className="w-6 h-6 text-red-600" />
+                )}
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
+                  className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusColor(
                     votingConfig.status
                   )}`}
                 >
                   {getStatusLabel(votingConfig.status)}
                 </span>
-              )}
-            </div>
+              </div>
+            )}
+            {votingConfig && (
+              <p className="text-sm text-muted-foreground">
+                {votingConfig.status === "active" 
+                  ? "La votación está actualmente activa. Los usuarios pueden votar."
+                  : "La votación está actualmente cerrada. Los usuarios no pueden votar."}
+              </p>
+            )}
           </div>
 
           {/* Controles de Estado */}
           <div className="flex gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleUpdateStatus("pending")}
-              disabled={isUpdatingStatus || votingConfig?.status === "pending"}
-              className="flex-1"
-            >
-              {isUpdatingStatus && votingConfig?.status !== "pending" ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : null}
-              Pendiente
-            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -285,15 +301,15 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
                 <div className="grid grid-cols-3 gap-2">
                   <div className="bg-gold/10 rounded-lg p-2 text-center border border-gold/20">
                     <p className="text-xl font-bold text-foreground">{project.firstPlace}</p>
-                    <p className="text-xs text-muted-foreground">🥇 1°</p>
+                    <p className="text-xs text-muted-foreground">1º lugar</p>
                   </div>
                   <div className="bg-silver/10 rounded-lg p-2 text-center border border-silver/20">
                     <p className="text-xl font-bold text-foreground">{project.secondPlace}</p>
-                    <p className="text-xs text-muted-foreground">🥈 2°</p>
+                    <p className="text-xs text-muted-foreground">2º lugar</p>
                   </div>
                   <div className="bg-bronze/10 rounded-lg p-2 text-center border border-bronze/20">
                     <p className="text-xl font-bold text-foreground">{project.thirdPlace}</p>
-                    <p className="text-xs text-muted-foreground">🥉 3°</p>
+                    <p className="text-xs text-muted-foreground">3º lugar</p>
                   </div>
                 </div>
               </div>
@@ -333,7 +349,7 @@ export function AdminDashboard({ adminEmail, onBackToStart }: AdminDashboardProp
                         <p className="text-sm font-medium text-foreground">{voter.userEmail}</p>
                         {voter.ranking && (
                           <p className="text-xs text-muted-foreground mt-1">
-                            🥇 {voter.ranking[0]} • 🥈 {voter.ranking[1]} • 🥉 {voter.ranking[2]}
+                            1º: {voter.ranking[0]} • 2º: {voter.ranking[1]} • 3º: {voter.ranking[2]}
                           </p>
                         )}
                       </div>

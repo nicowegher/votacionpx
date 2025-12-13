@@ -3,9 +3,29 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Función helper para verificar si es admin
     function isAdmin(email) {
-      return email.matches('.*@(pxsol\\.com|racimo\\.tech)$') &&
+      return email != null && 
+             email.matches('.*@(pxsol\\.com|racimo\\.tech)$') &&
              email in ['pablo@pxsol.com', 'sofia@pxsol.com', 
                       'nw@racimo.tech', 'camila@pxsol.com'];
+    }
+    
+    // Función helper para obtener el email del token (puede ser null para usuarios anónimos)
+    function getUserEmail() {
+      return request.auth != null && request.auth.token.email != null 
+             ? request.auth.token.email 
+             : null;
+    }
+    
+    // Función helper para validar que un email es válido (dominio permitido)
+    // Para usuarios anónimos en modo desarrollo
+    function isValidEmail(email) {
+      return email != null && 
+             (email.matches('.*@(pxsol\\.com|racimo\\.tech)$') ||
+              email == 'nicolas.wegher@gmail.com' ||
+              email == 'camigd2901@gmail.com' ||
+              email == 'socuerdo@gmail.com' ||
+              email == 'pablomartino94@gmail.com' ||
+              email == 'digitalhotelero@gmail.com');
     }
     
     // Función helper para verificar si la votación está cerrada
@@ -18,19 +38,35 @@ service cloud.firestore {
     match /votes/{voteId} {
       allow read: if request.auth != null && 
                      (resource.data.userId == request.auth.uid ||
-                      isAdmin(request.auth.token.email) ||
+                      (getUserEmail() != null && isAdmin(getUserEmail())) ||
                       isVotingClosed());
+      // Permitir crear voto si:
+      // - El userId coincide con el auth.uid
+      // - La votación no está cerrada
+      // - Si el usuario tiene email en el token, debe coincidir con el email del voto
+      // - Si el usuario es anónimo (sin email en token), el email del voto debe ser válido
       allow create: if request.auth != null && 
                        request.resource.data.userId == request.auth.uid &&
-                       request.resource.data.userEmail == request.auth.token.email &&
-                       !isVotingClosed();
+                       !isVotingClosed() &&
+                       request.resource.data.userEmail != null &&
+                       ((getUserEmail() != null && 
+                         request.resource.data.userEmail == getUserEmail()) ||
+                        (getUserEmail() == null && 
+                         request.resource.data.userEmail != null &&
+                         (request.resource.data.userEmail.matches('.*@(pxsol\\.com|racimo\\.tech)$') ||
+                          request.resource.data.userEmail == 'nicolas.wegher@gmail.com' ||
+                          request.resource.data.userEmail == 'camigd2901@gmail.com' ||
+                          request.resource.data.userEmail == 'socuerdo@gmail.com' ||
+                          request.resource.data.userEmail == 'pablomartino94@gmail.com' ||
+                          request.resource.data.userEmail == 'digitalhotelero@gmail.com')));
     }
     
     // Configuración: solo admins pueden escribir, todos autenticados pueden leer
     match /config/voting {
       allow read: if request.auth != null;
       allow write: if request.auth != null && 
-                      isAdmin(request.auth.token.email);
+                      getUserEmail() != null &&
+                      isAdmin(getUserEmail());
     }
   }
 }

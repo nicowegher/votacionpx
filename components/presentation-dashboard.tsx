@@ -12,6 +12,26 @@ interface ProjectStats {
   totalPoints: number
 }
 
+function compareProjectStats(a: ProjectStats, b: ProjectStats): number {
+  // 1. Comparar por puntos totales (descendente)
+  if (b.totalPoints !== a.totalPoints) {
+    return b.totalPoints - a.totalPoints
+  }
+  
+  // 2. Desempate por cantidad de primeros lugares (descendente)
+  if (b.firstPlace !== a.firstPlace) {
+    return b.firstPlace - a.firstPlace
+  }
+  
+  // 3. Desempate por cantidad de segundos lugares (descendente)
+  if (b.secondPlace !== a.secondPlace) {
+    return b.secondPlace - a.secondPlace
+  }
+  
+  // 4. Desempate final por orden alfabético (ascendente)
+  return a.name.localeCompare(b.name)
+}
+
 export function PresentationDashboard() {
   const [projectStats, setProjectStats] = useState<ProjectStats[]>([])
   const [totalVotes, setTotalVotes] = useState(0)
@@ -53,7 +73,7 @@ export function PresentationDashboard() {
       })
     })
 
-    const sortedStats = Object.values(stats).sort((a, b) => b.totalPoints - a.totalPoints)
+    const sortedStats = Object.values(stats).sort(compareProjectStats)
     setProjectStats(sortedStats)
   }
 
@@ -103,70 +123,70 @@ export function PresentationDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-muted/10 to-background text-foreground p-8">
+    <div className="min-h-screen bg-gradient-to-b from-background via-muted/10 to-background text-foreground p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/20 mb-6">
-            <Trophy className="w-10 h-10 text-[#fbbf24]" />
+        <div className="text-center mb-8 md:mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/20 mb-6">
+            <Trophy className="w-8 h-8 md:w-10 md:h-10 text-[#fbbf24]" />
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-[#fbbf24] via-[#f59e0b] to-[#d97706] bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-[#fbbf24] via-[#f59e0b] to-[#d97706] bg-clip-text text-transparent">
             Resultados Finales
           </h1>
-          <p className="text-2xl text-muted-foreground">Concurso IA - PXSOL 2025</p>
-          <div className="mt-6 text-4xl font-bold text-[#fbbf24]">{totalVotes} Votos</div>
+          <p className="text-lg md:text-2xl text-muted-foreground">Concurso IA - PXSOL 2025</p>
+          <div className="mt-6 text-2xl md:text-4xl font-bold text-[#fbbf24]">{totalVotes} Votos</div>
         </div>
 
         {/* Podium Visual */}
         {projectStats.length >= 3 ? (
-          <div className="mb-12 flex items-end justify-center gap-4 max-w-4xl mx-auto">
+          <div className="mb-8 md:mb-12 flex items-end justify-center gap-1 md:gap-4 max-w-4xl mx-auto px-2">
             {/* 2nd Place */}
-            <div className="flex-1 flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0s_forwards]">
-              <div className="w-full bg-card/80 rounded-t-3xl p-6 border-2 border-border text-center mb-4 backdrop-blur-sm">
-                <span className="text-5xl mb-2 block">🥈</span>
-                <span className="font-bold text-xl text-foreground line-clamp-2">{projectStats[1].name}</span>
-                <div className="mt-3 text-3xl font-bold text-muted-foreground">{projectStats[1].totalPoints} pts</div>
+            <div className="flex-1 flex flex-col items-center">
+              <div className="w-full bg-card/80 rounded-t-2xl md:rounded-t-3xl p-3 md:p-6 border-2 border-border text-center mb-2 md:mb-4 backdrop-blur-sm">
+                <span className="text-3xl md:text-5xl mb-2 block">🥈</span>
+                <span className="font-bold text-sm md:text-xl text-foreground line-clamp-2">{projectStats[1].name}</span>
+                <div className="mt-3 text-xl md:text-3xl font-bold text-muted-foreground">{projectStats[1].totalPoints} pts</div>
               </div>
-              <div className="w-full h-32 bg-gradient-to-t from-muted to-muted/70 rounded-t-2xl flex items-center justify-center shadow-lg border-t border-border">
-                <span className="text-4xl font-bold text-foreground">2°</span>
+              <div className="w-full h-20 md:h-32 bg-gradient-to-t from-muted to-muted/70 rounded-t-lg md:rounded-t-2xl flex items-center justify-center shadow-lg border-t border-border">
+                <span className="text-2xl md:text-4xl font-bold text-foreground">2°</span>
               </div>
             </div>
 
             {/* 1st Place */}
-            <div className="flex-1 flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0.2s_forwards]">
-              <div className="w-full bg-gradient-to-b from-[#fbbf24]/30 to-[#f59e0b]/20 rounded-t-3xl p-8 border-2 border-[#fbbf24] text-center mb-4 backdrop-blur-sm shadow-2xl">
-                <span className="text-6xl mb-3 block">🥇</span>
-                <span className="font-bold text-2xl text-foreground line-clamp-2">{projectStats[0].name}</span>
-                <div className="mt-4 text-4xl font-bold text-[#fbbf24]">{projectStats[0].totalPoints} pts</div>
+            <div className="flex-1 flex flex-col items-center">
+              <div className="w-full bg-gradient-to-b from-[#fbbf24]/30 to-[#f59e0b]/20 rounded-t-2xl md:rounded-t-3xl p-4 md:p-8 border-2 border-[#fbbf24] text-center mb-2 md:mb-4 backdrop-blur-sm shadow-2xl">
+                <span className="text-4xl md:text-6xl mb-3 block">🥇</span>
+                <span className="font-bold text-base md:text-2xl text-foreground line-clamp-2">{projectStats[0].name}</span>
+                <div className="mt-4 text-2xl md:text-4xl font-bold text-[#fbbf24]">{projectStats[0].totalPoints} pts</div>
               </div>
-              <div className="w-full h-40 bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t-2xl flex items-center justify-center shadow-2xl border-t border-[#fbbf24]">
-                <span className="text-5xl font-bold text-white">1°</span>
+              <div className="w-full h-28 md:h-40 bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t-lg md:rounded-t-2xl flex items-center justify-center shadow-2xl border-t border-[#fbbf24]">
+                <span className="text-3xl md:text-5xl font-bold text-white">1°</span>
               </div>
             </div>
 
             {/* 3rd Place */}
-            <div className="flex-1 flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0.4s_forwards]">
-              <div className="w-full bg-card/80 rounded-t-3xl p-6 border-2 border-border text-center mb-4 backdrop-blur-sm">
-                <span className="text-5xl mb-2 block">🥉</span>
-                <span className="font-bold text-xl text-foreground line-clamp-2">{projectStats[2].name}</span>
-                <div className="mt-3 text-3xl font-bold text-muted-foreground">{projectStats[2].totalPoints} pts</div>
+            <div className="flex-1 flex flex-col items-center">
+              <div className="w-full bg-card/80 rounded-t-2xl md:rounded-t-3xl p-3 md:p-6 border-2 border-border text-center mb-2 md:mb-4 backdrop-blur-sm">
+                <span className="text-3xl md:text-5xl mb-2 block">🥉</span>
+                <span className="font-bold text-sm md:text-xl text-foreground line-clamp-2">{projectStats[2].name}</span>
+                <div className="mt-3 text-xl md:text-3xl font-bold text-muted-foreground">{projectStats[2].totalPoints} pts</div>
               </div>
-              <div className="w-full h-24 bg-gradient-to-t from-[#d97706] to-[#f59e0b] rounded-t-2xl flex items-center justify-center shadow-lg border-t border-[#d97706]">
-                <span className="text-3xl font-bold text-white">3°</span>
+              <div className="w-full h-16 md:h-24 bg-gradient-to-t from-[#d97706] to-[#f59e0b] rounded-t-lg md:rounded-t-2xl flex items-center justify-center shadow-lg border-t border-[#d97706]">
+                <span className="text-xl md:text-3xl font-bold text-white">3°</span>
               </div>
             </div>
           </div>
         ) : projectStats.length > 0 ? (
-          <div className="mb-12 flex items-end justify-center gap-4 max-w-4xl mx-auto">
+          <div className="mb-8 md:mb-12 flex items-end justify-center gap-1 md:gap-4 max-w-4xl mx-auto px-2">
             {/* Solo mostrar el primer lugar si hay menos de 3 proyectos */}
-            <div className="flex-1 max-w-md flex flex-col items-center opacity-0 animate-[fadeIn_0.6s_ease-out_0.2s_forwards]">
-              <div className="w-full bg-gradient-to-b from-[#fbbf24]/30 to-[#f59e0b]/20 rounded-t-3xl p-8 border-2 border-[#fbbf24] text-center mb-4 backdrop-blur-sm shadow-2xl">
-                <span className="text-6xl mb-3 block">🥇</span>
-                <span className="font-bold text-2xl text-foreground line-clamp-2">{projectStats[0].name}</span>
-                <div className="mt-4 text-4xl font-bold text-[#fbbf24]">{projectStats[0].totalPoints} pts</div>
+            <div className="flex-1 max-w-md flex flex-col items-center">
+              <div className="w-full bg-gradient-to-b from-[#fbbf24]/30 to-[#f59e0b]/20 rounded-t-2xl md:rounded-t-3xl p-4 md:p-8 border-2 border-[#fbbf24] text-center mb-2 md:mb-4 backdrop-blur-sm shadow-2xl">
+                <span className="text-4xl md:text-6xl mb-3 block">🥇</span>
+                <span className="font-bold text-base md:text-2xl text-foreground line-clamp-2">{projectStats[0].name}</span>
+                <div className="mt-4 text-2xl md:text-4xl font-bold text-[#fbbf24]">{projectStats[0].totalPoints} pts</div>
               </div>
-              <div className="w-full h-40 bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t-2xl flex items-center justify-center shadow-2xl border-t border-[#fbbf24]">
-                <span className="text-5xl font-bold text-white">1°</span>
+              <div className="w-full h-28 md:h-40 bg-gradient-to-t from-[#f59e0b] to-[#fbbf24] rounded-t-lg md:rounded-t-2xl flex items-center justify-center shadow-2xl border-t border-[#fbbf24]">
+                <span className="text-3xl md:text-5xl font-bold text-white">1°</span>
               </div>
             </div>
           </div>

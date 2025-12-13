@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ProjectCard } from "./project-card"
 import { Podium } from "./podium"
 import { VotingTimer } from "./voting-timer"
+import { VotingStatusBanner } from "./voting-status-banner"
 import { Sparkles, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -38,7 +39,7 @@ const initialProjects: Project[] = [
   },
 ]
 
-const getVotingEndTime = () => new Date(Date.now() + 2 * 60 * 1000)
+const getVotingEndTime = () => new Date(Date.now() + 3 * 60 * 1000)
 
 interface PodiumRankerProps {
   onVoteSubmitted?: (ranking: string[], timeExpired?: boolean) => void
@@ -51,6 +52,7 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
   const [showPodium, setShowPodium] = useState(false)
   const [votingClosed, setVotingClosed] = useState(false)
   const [closedByAdmin, setClosedByAdmin] = useState(false)
+  const [timeExpired, setTimeExpired] = useState(false)
   const [endTime] = useState(getVotingEndTime)
 
   // Suscribirse al estado de la votación en tiempo real
@@ -62,6 +64,12 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
           if (config?.status === "closed") {
             setVotingClosed(true)
             setClosedByAdmin(true)
+          } else {
+            // Si la votación se reabre por admin, permitir votar de nuevo
+            // (a menos que el tiempo haya expirado)
+            setClosedByAdmin(false)
+            // Solo permitir votar si el tiempo no ha expirado
+            setVotingClosed(timeExpired)
           }
         })
         return unsubscribe
@@ -80,7 +88,7 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
         unsubscribe()
       }
     }
-  }, [])
+  }, [timeExpired])
 
   const assignToPosition = (project: Project, position: number) => {
     if (votingClosed) return
@@ -141,6 +149,7 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
   }
 
   const handleTimeUp = () => {
+    setTimeExpired(true)
     setVotingClosed(true)
     if (onVoteSubmitted) {
       const rankingNames = ranking.map((p) => (p ? p.name : ""))
@@ -177,7 +186,7 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
     <div className="min-h-screen flex flex-col px-3 py-4 max-w-lg mx-auto">
       <div className="flex items-center justify-between mb-3">
         <h1 className="text-xl font-bold text-foreground">Concurso IA</h1>
-        <VotingTimer endTime={endTime} onTimeUp={handleTimeUp} />
+        {!votingClosed && <VotingTimer endTime={endTime} onTimeUp={handleTimeUp} />}
       </div>
 
       {/* Subtitle */}
@@ -185,10 +194,14 @@ export function PodiumRanker({ onVoteSubmitted, onBack }: PodiumRankerProps) {
         <p className="text-muted-foreground text-xs">Seleccioná la medalla de cada proyecto</p>
       </div>
 
-      {votingClosed && (
-        <div className="mb-4 p-3 bg-destructive/10 rounded-xl text-center">
+      {/* Banner de estado de votación */}
+      <VotingStatusBanner />
+
+      {/* Mensaje adicional si el tiempo se agotó (diferente del cierre por admin) */}
+      {votingClosed && !closedByAdmin && (
+        <div className="mb-4 p-3 bg-destructive/10 rounded-xl text-center border border-destructive/20">
           <p className="text-destructive font-medium text-sm">
-            {closedByAdmin ? "La votación ha sido cerrada por los administradores" : "El tiempo se ha agotado"}
+            El tiempo se ha agotado
           </p>
         </div>
       )}
